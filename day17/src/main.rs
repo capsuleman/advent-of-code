@@ -1,10 +1,9 @@
 use std::cmp::max;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::File;
 use std::hash::Hash;
 use std::io::prelude::*;
-use tqdm::tqdm;
 
 #[derive(Debug)]
 enum Wind {
@@ -14,11 +13,22 @@ enum Wind {
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 struct Position {
-    x: u32,
-    y: u32,
+    x: u64,
+    y: u64,
 }
 
-const NUMBER_OF_ROCKS: u32 = 2022;
+#[derive(Debug, Eq, Hash, PartialEq)]
+struct Input {
+    wind_index: usize,
+    rock_type: u64,
+}
+
+struct RockInformation {
+    rock_count: u64,
+    max_y: u64,
+}
+
+const NUMBER_OF_ROCKS: u64 = 1000000000000;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -27,9 +37,29 @@ fn main() {
 
     let mut wind_index: usize = 0;
     let mut rested_rocks: HashSet<Position> = HashSet::new();
-    let mut max_y: u32 = 0;
+    let mut max_y: u64 = 0;
 
-    for rock_count in tqdm(0..NUMBER_OF_ROCKS) {
+    let mut input_map: HashMap<Input, RockInformation> = HashMap::new();
+
+    for rock_count in 0..NUMBER_OF_ROCKS {
+        let input = Input {
+            wind_index,
+            rock_type: rock_count % 5,
+        };
+        let rock_info = RockInformation { rock_count, max_y };
+        if input_map.contains_key(&input) {
+            let remaining_rocks = NUMBER_OF_ROCKS - rock_count;
+            let rock_count_by_cycle = rock_count - input_map.get(&input).unwrap().rock_count;
+            let is_cycle_full = remaining_rocks % rock_count_by_cycle == 0;
+            if is_cycle_full {
+                let cycle_count = remaining_rocks / rock_count_by_cycle;
+                let additional_y_by_cycle = max_y - input_map.get(&input).unwrap().max_y;
+                println!("{}", max_y + cycle_count * additional_y_by_cycle);
+                return;
+            }
+        }
+        input_map.insert(input, rock_info);
+
         let rock_origin = Position { x: 3, y: max_y + 4 };
         let mut rock = get_new_rock(rock_origin, rock_count);
 
@@ -84,7 +114,7 @@ fn char_to_wind(char: char) -> Wind {
     .expect(&format!("Unrecognized character: '{char}'."))
 }
 
-fn get_new_rock(new_rock_origin: Position, rock_count: u32) -> Vec<Position> {
+fn get_new_rock(new_rock_origin: Position, rock_count: u64) -> Vec<Position> {
     let x = new_rock_origin.x;
     let y = new_rock_origin.y;
 
