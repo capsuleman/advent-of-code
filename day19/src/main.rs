@@ -34,7 +34,7 @@ struct ProductionState {
     geode_count: u64,
 }
 
-const MAX_MINUTES: u64 = 24;
+const MAX_MINUTES: u64 = 32;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -43,15 +43,15 @@ fn main() {
     let mut handles: Vec<_> = Vec::new();
 
     for blueprint in parse_blueprints(file_path) {
-        handles.push(thread::spawn(move || get_quality_level(&blueprint)));
+        handles.push(thread::spawn(move || find_max_geode_count(&blueprint)));
     }
 
-    let mut quality_level_sum = 0;
+    let mut max_geode_product = 1;
     for process in handles {
-        quality_level_sum += process.join().unwrap();
+        max_geode_product *= process.join().unwrap();
     }
 
-    println!("Result: {quality_level_sum}");
+    println!("Result: {max_geode_product}");
 }
 
 fn parse_blueprints(file_path: &String) -> Vec<Blueprint> {
@@ -96,7 +96,7 @@ fn parse_blueprints(file_path: &String) -> Vec<Blueprint> {
     blueprints
 }
 
-fn get_quality_level(blueprint: &Blueprint) -> u64 {
+fn find_max_geode_count(blueprint: &Blueprint) -> u64 {
     let initial_production_state = ProductionState {
         minute: 0,
         ore_robot_count: 1,
@@ -109,13 +109,13 @@ fn get_quality_level(blueprint: &Blueprint) -> u64 {
         geode_count: 0,
     };
 
-    let max_geode_produced = find_max_geode_count(&initial_production_state, &blueprint, 0);
+    let max_geode_produced = find_max_geode_count_aux(&initial_production_state, &blueprint, 0, 0);
     println!(
         "[#{}]\tMax geode produced {max_geode_produced}",
         blueprint.id
     );
 
-    max_geode_produced * blueprint.id
+    max_geode_produced
 }
 
 fn pass_time(production_state: &mut ProductionState, minute_count: u64) {
@@ -132,16 +132,22 @@ fn pay_cost(production_state: &mut ProductionState, cost: &Cost) {
     production_state.obsidian_count -= cost.obsidian;
 }
 
-fn find_max_geode_count(
+fn find_max_geode_count_aux(
     production_state: &ProductionState,
     blueprint: &Blueprint,
+    current_max_geode_count: u64,
     indent: u64,
 ) -> u64 {
     if production_state.minute == MAX_MINUTES {
         return production_state.geode_count;
     }
 
-    let mut max_geode_counts = Vec::new();
+    if get_max_geode_count_greater_value(production_state) < current_max_geode_count {
+        return 0;
+    }
+
+    let mut new_robot_found = false;
+    let mut temp_max_geode_count = current_max_geode_count;
 
     if let Some(required_minutes) =
         get_required_minutes_until_cost_reached(production_state, &blueprint.ore_robot_cost)
@@ -152,11 +158,16 @@ fn find_max_geode_count(
             pay_cost(&mut new_production_state, &blueprint.ore_robot_cost);
             new_production_state.ore_robot_count += 1;
 
-            max_geode_counts.push(find_max_geode_count(
-                &new_production_state,
-                blueprint,
-                indent + 1,
-            ));
+            new_robot_found = true;
+            temp_max_geode_count = std::cmp::max(
+                temp_max_geode_count,
+                find_max_geode_count_aux(
+                    &new_production_state,
+                    blueprint,
+                    temp_max_geode_count,
+                    indent + 1,
+                ),
+            );
         }
     }
 
@@ -169,11 +180,16 @@ fn find_max_geode_count(
             pay_cost(&mut new_production_state, &blueprint.clay_robot_cost);
             new_production_state.clay_robot_count += 1;
 
-            max_geode_counts.push(find_max_geode_count(
-                &new_production_state,
-                blueprint,
-                indent + 1,
-            ));
+            new_robot_found = true;
+            temp_max_geode_count = std::cmp::max(
+                temp_max_geode_count,
+                find_max_geode_count_aux(
+                    &new_production_state,
+                    blueprint,
+                    temp_max_geode_count,
+                    indent + 1,
+                ),
+            );
         }
     }
 
@@ -186,11 +202,16 @@ fn find_max_geode_count(
             pay_cost(&mut new_production_state, &blueprint.obsidian_robot_cost);
             new_production_state.obsidian_robot_count += 1;
 
-            max_geode_counts.push(find_max_geode_count(
-                &new_production_state,
-                blueprint,
-                indent + 1,
-            ));
+            new_robot_found = true;
+            temp_max_geode_count = std::cmp::max(
+                temp_max_geode_count,
+                find_max_geode_count_aux(
+                    &new_production_state,
+                    blueprint,
+                    temp_max_geode_count,
+                    indent + 1,
+                ),
+            );
         }
     }
 
@@ -203,24 +224,28 @@ fn find_max_geode_count(
             pay_cost(&mut new_production_state, &blueprint.geode_robot_cost);
             new_production_state.geode_robot_count += 1;
 
-            max_geode_counts.push(find_max_geode_count(
-                &new_production_state,
-                blueprint,
-                indent + 1,
-            ));
+            new_robot_found = true;
+            temp_max_geode_count = std::cmp::max(
+                temp_max_geode_count,
+                find_max_geode_count_aux(
+                    &new_production_state,
+                    blueprint,
+                    temp_max_geode_count,
+                    indent + 1,
+                ),
+            );
         }
     }
 
-    if max_geode_counts.len() > 0 {
-        let possibilities_count = max_geode_counts.len();
-        let max_geode_count = max_geode_counts.into_iter().max().unwrap();
+    if new_robot_found {
         if indent <= 5 {
             println!(
-                "[#{}]\t{indent}\tFound among {possibilities_count} possibilities -> {max_geode_count}", blueprint.id
+                "[#{}]\t{indent}\t{current_max_geode_count} -> {temp_max_geode_count}",
+                blueprint.id
             );
         }
 
-        return max_geode_count;
+        return temp_max_geode_count;
     }
 
     let mut new_production_state = production_state.clone();
@@ -284,4 +309,14 @@ fn ceiled_division(x: u64, y: u64) -> u64 {
     }
 
     (x + y - 1) / y
+}
+
+fn get_max_geode_count_greater_value(production_state: &ProductionState) -> u64 {
+    let remaining_minutes = MAX_MINUTES - production_state.minute;
+    let geode_robot_count = production_state.geode_robot_count;
+    let geode_count = production_state.geode_count;
+
+    geode_count // Initial number of geode
+        + geode_robot_count * remaining_minutes // Current robot production
+        + remaining_minutes * (remaining_minutes + 1) / 2 // Production if each remaining minute produces a robot
 }
