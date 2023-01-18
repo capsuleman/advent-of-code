@@ -152,7 +152,12 @@ fn find_max_geode_count_aux(
     if let Some(required_minutes) =
         get_required_minutes_until_cost_reached(production_state, &blueprint.ore_robot_cost)
     {
-        if production_state.minute + required_minutes < MAX_MINUTES {
+        let is_robot_required = production_state.ore_robot_count < blueprint.ore_robot_cost.ore
+            || production_state.ore_robot_count < blueprint.clay_robot_cost.ore
+            || production_state.ore_robot_count < blueprint.obsidian_robot_cost.ore
+            || production_state.ore_robot_count < blueprint.geode_robot_cost.ore;
+
+        if production_state.minute + required_minutes < MAX_MINUTES && is_robot_required {
             let mut new_production_state = production_state.clone();
             pass_time(&mut new_production_state, required_minutes);
             pay_cost(&mut new_production_state, &blueprint.ore_robot_cost);
@@ -174,7 +179,12 @@ fn find_max_geode_count_aux(
     if let Some(required_minutes) =
         get_required_minutes_until_cost_reached(production_state, &blueprint.clay_robot_cost)
     {
-        if production_state.minute + required_minutes < MAX_MINUTES {
+        let is_robot_required = production_state.clay_robot_count < blueprint.ore_robot_cost.clay
+            || production_state.clay_robot_count < blueprint.clay_robot_cost.clay
+            || production_state.clay_robot_count < blueprint.obsidian_robot_cost.clay
+            || production_state.clay_robot_count < blueprint.geode_robot_cost.clay;
+
+        if production_state.minute + required_minutes < MAX_MINUTES && is_robot_required {
             let mut new_production_state = production_state.clone();
             pass_time(&mut new_production_state, required_minutes);
             pay_cost(&mut new_production_state, &blueprint.clay_robot_cost);
@@ -196,7 +206,13 @@ fn find_max_geode_count_aux(
     if let Some(required_minutes) =
         get_required_minutes_until_cost_reached(production_state, &blueprint.obsidian_robot_cost)
     {
-        if production_state.minute + required_minutes < MAX_MINUTES {
+        let is_robot_required = production_state.obsidian_robot_count
+            < blueprint.ore_robot_cost.obsidian
+            || production_state.obsidian_robot_count < blueprint.clay_robot_cost.obsidian
+            || production_state.obsidian_robot_count < blueprint.obsidian_robot_cost.obsidian
+            || production_state.obsidian_robot_count < blueprint.geode_robot_cost.obsidian;
+
+        if production_state.minute + required_minutes < MAX_MINUTES && is_robot_required {
             let mut new_production_state = production_state.clone();
             pass_time(&mut new_production_state, required_minutes);
             pay_cost(&mut new_production_state, &blueprint.obsidian_robot_cost);
@@ -238,13 +254,6 @@ fn find_max_geode_count_aux(
     }
 
     if new_robot_found {
-        if indent <= 5 {
-            println!(
-                "[#{}]\t{indent}\t{current_max_geode_count} -> {temp_max_geode_count}",
-                blueprint.id
-            );
-        }
-
         return temp_max_geode_count;
     }
 
