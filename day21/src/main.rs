@@ -1,5 +1,6 @@
 use regex::Regex;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
@@ -25,10 +26,28 @@ fn main() {
 
     let monkeys = parse_monkeys(&file_path);
 
-    println!(
-        "Result: {}",
-        compute_monkey(&String::from("root"), &monkeys)
-    );
+    let humn_lignee = get_humn_lignee(&String::from("root"), &monkeys);
+
+    if let Monkey::Operation(monkey1, monkey2, _) = monkeys.get(&String::from("root")).unwrap() {
+        let result = if humn_lignee.contains(monkey1) {
+            compute_expected(
+                compute_monkey(monkey2, &monkeys),
+                monkey1,
+                &monkeys,
+                &humn_lignee,
+            )
+        } else {
+            compute_expected(
+                compute_monkey(monkey1, &monkeys),
+                monkey2,
+                &monkeys,
+                &humn_lignee,
+            )
+        };
+        println!("Result: {}", result);
+    } else {
+        panic!("Root is not an operation")
+    };
 }
 
 fn parse_monkeys(file_path: &String) -> HashMap<String, Monkey> {
@@ -86,6 +105,106 @@ fn compute_monkey(monkey_name: &String, monkeys: &HashMap<String, Monkey>) -> i6
         }
         Monkey::Operation(monkey1, monkey2, Operator::Divide) => {
             compute_monkey(monkey1, monkeys) / compute_monkey(monkey2, monkeys)
+        }
+    }
+}
+
+fn get_humn_lignee(monkey_name: &String, monkeys: &HashMap<String, Monkey>) -> HashSet<String> {
+    if monkey_name == "humn" {
+        return HashSet::from([String::from("humn")]);
+    }
+
+    let monkey = monkeys.get(monkey_name).unwrap();
+
+    match monkey {
+        Monkey::Value(_) => HashSet::new(),
+        Monkey::Operation(monkey1, monkey2, _) => {
+            let mut humn_lignee_1 = get_humn_lignee(monkey1, monkeys);
+            let mut humn_lignee_2 = get_humn_lignee(monkey2, monkeys);
+
+            if humn_lignee_1.len() > 0 {
+                humn_lignee_1.insert(monkey_name.clone());
+                humn_lignee_1
+            } else if humn_lignee_2.len() > 0 {
+                humn_lignee_2.insert(monkey_name.clone());
+                humn_lignee_2
+            } else {
+                HashSet::new()
+            }
+        }
+    }
+}
+
+fn compute_expected(
+    expected_value: i64,
+    monkey_name: &String,
+    monkeys: &HashMap<String, Monkey>,
+    humn_lignee: &HashSet<String>,
+) -> i64 {
+    if monkey_name == "humn" {
+        return expected_value;
+    };
+
+    let monkey = monkeys.get(monkey_name).unwrap();
+
+    match monkey {
+        Monkey::Value(_) => panic!(),
+        Monkey::Operation(monkey1, monkey2, operator) => {
+            if humn_lignee.contains(monkey1) {
+                match operator {
+                    Operator::Add => compute_expected(
+                        expected_value - compute_monkey(monkey2, monkeys),
+                        monkey1,
+                        monkeys,
+                        humn_lignee,
+                    ),
+                    Operator::Minus => compute_expected(
+                        expected_value + compute_monkey(monkey2, monkeys),
+                        monkey1,
+                        monkeys,
+                        humn_lignee,
+                    ),
+                    Operator::Multiply => compute_expected(
+                        expected_value / compute_monkey(monkey2, monkeys),
+                        monkey1,
+                        monkeys,
+                        humn_lignee,
+                    ),
+                    Operator::Divide => compute_expected(
+                        expected_value * compute_monkey(monkey2, monkeys),
+                        monkey1,
+                        monkeys,
+                        humn_lignee,
+                    ),
+                }
+            } else {
+                match operator {
+                    Operator::Add => compute_expected(
+                        expected_value - compute_monkey(monkey1, monkeys),
+                        monkey2,
+                        monkeys,
+                        humn_lignee,
+                    ),
+                    Operator::Minus => compute_expected(
+                        compute_monkey(monkey1, monkeys) - expected_value,
+                        monkey2,
+                        monkeys,
+                        humn_lignee,
+                    ),
+                    Operator::Multiply => compute_expected(
+                        expected_value / compute_monkey(monkey1, monkeys),
+                        monkey2,
+                        monkeys,
+                        humn_lignee,
+                    ),
+                    Operator::Divide => compute_expected(
+                        compute_monkey(monkey1, monkeys) / expected_value,
+                        monkey2,
+                        monkeys,
+                        humn_lignee,
+                    ),
+                }
+            }
         }
     }
 }
