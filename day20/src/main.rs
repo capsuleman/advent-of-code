@@ -8,14 +8,18 @@ struct Element {
     index: usize,
 }
 
+const DECRYPTION_KEY: i64 = 811589153;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let file_path = args.get(1).expect("No input file given.");
 
     let mut encrypted_file = parse_encrypted_file(&file_path);
 
-    for index in 0..encrypted_file.len() {
-        execute_instruction(&mut encrypted_file, index);
+    for _ in 0..10 {
+        for index in 0..encrypted_file.len() {
+            execute_instruction(&mut encrypted_file, index);
+        }
     }
 
     println!("Result: {}", find_coordinates(&encrypted_file));
@@ -30,7 +34,7 @@ fn parse_encrypted_file(file_path: &String) -> Vec<Element> {
         .into_iter()
         .enumerate()
         .map(|(index, line)| Element {
-            instruction: line.unwrap().parse::<i64>().unwrap(),
+            instruction: line.unwrap().parse::<i64>().unwrap() * DECRYPTION_KEY,
             index,
         })
         .collect()
