@@ -15,8 +15,8 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let file_path = args.get(1).expect("to be given an input file.");
     let distances_graph = parse_distances(file_path);
-    let minimum_distance = get_minimum_distance(&distances_graph);
-    println!("{:#?}", minimum_distance)
+    let maximum_distance = get_maximum_distance(&distances_graph);
+    println!("{:#?}", maximum_distance)
 }
 
 fn parse_distances(file_path: &String) -> HashMap<String, HashMap<String, u32>> {
@@ -52,20 +52,20 @@ fn insert_distance_into_graph(
         .or_insert(HashMap::from([(to.clone(), distance)]));
 }
 
-fn get_minimum_distance(graph: &HashMap<String, HashMap<String, u32>>) -> u32 {
-    let mut min_distance = u32::MAX;
+fn get_maximum_distance(graph: &HashMap<String, HashMap<String, u32>>) -> u32 {
+    let mut max_distance = u32::MIN;
 
     for (position, _sub_graph) in graph.into_iter() {
-        min_distance = u32::min(
-            min_distance,
-            get_minimum_distance_aux(HashSet::from([position.clone()]), position, graph),
+        max_distance = u32::max(
+            max_distance,
+            get_maximum_distance_aux(HashSet::from([position.clone()]), position, graph),
         );
     }
 
-    min_distance
+    max_distance
 }
 
-fn get_minimum_distance_aux(
+fn get_maximum_distance_aux(
     already_seen: HashSet<String>,
     current_position: &String,
     graph: &HashMap<String, HashMap<String, u32>>,
@@ -75,7 +75,7 @@ fn get_minimum_distance_aux(
     }
 
     let position_sub_graph = graph.get(current_position).expect("to get sub graph");
-    let mut min_distance = u32::MAX;
+    let mut max_distance = u32::MIN;
 
     for (next_position, distance) in position_sub_graph.iter() {
         if already_seen.contains(next_position) {
@@ -83,10 +83,10 @@ fn get_minimum_distance_aux(
         }
         let mut new_already_seen = already_seen.clone();
         new_already_seen.insert(next_position.clone());
-        let next_minimum_distance =
-            get_minimum_distance_aux(new_already_seen, next_position, graph);
+        let next_maximum_distance =
+            get_maximum_distance_aux(new_already_seen, next_position, graph);
 
-        min_distance = u32::min(min_distance, next_minimum_distance + *distance);
+        max_distance = u32::max(max_distance, next_maximum_distance + *distance);
     }
-    min_distance
+    max_distance
 }
