@@ -21,13 +21,23 @@ fn main() {
         .read_to_string(&mut content)
         .expect("to read file");
 
-    let mut current_position = Position { x: 0, y: 0 };
+    let mut current_santa_position = Position { x: 0, y: 0 };
+    let mut current_robot_position = Position { x: 0, y: 0 };
     let mut positions = HashSet::new();
-    positions.insert(current_position.clone());
+    positions.insert(current_santa_position.clone());
+
+    let mut is_santa_turn = true;
 
     for order in content.as_bytes().into_iter() {
-        move_position(&mut current_position, order);
-        positions.insert(current_position.clone());
+        if is_santa_turn {
+            move_position(&mut current_santa_position, order);
+            positions.insert(current_santa_position.clone());
+            is_santa_turn = false;
+        } else {
+            move_position(&mut current_robot_position, order);
+            positions.insert(current_robot_position.clone());
+            is_santa_turn = true;
+        }
     }
 
     println!("{}", positions.len());
