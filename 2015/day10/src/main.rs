@@ -14,7 +14,7 @@ fn main() {
         .read_to_string(&mut sequence)
         .expect("to read file");
 
-    for _ in 0..40 {
+    for _ in 0..50 {
         sequence = look_and_say(sequence);
     }
 
