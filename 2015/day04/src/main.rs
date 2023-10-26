@@ -20,7 +20,7 @@ fn main() {
         let hash_string = format!("{:?}", md5::compute(combination));
 
         for (index, char) in hash_string.chars().enumerate() {
-            if index >= 5 {
+            if index >= 6 {
                 println!("{number_to_stick}");
                 exit(0);
             }
