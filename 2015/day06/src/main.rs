@@ -1,6 +1,6 @@
 use core::panic;
 use itertools::Itertools;
-use kdam::{tqdm, BarExt};
+use kdam::tqdm;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{
@@ -36,37 +36,32 @@ const MAX_Y: usize = 999;
 fn main() {
     let args: Vec<String> = env::args().collect();
     let file_path = args.get(1).expect("to be given an input file.");
-    let reversed_commands = parse_reversed_commands(file_path);
+    let commands = parse_commands(file_path);
 
-    let mut light_count: usize = 0;
+    let mut total_brightness: usize = 0;
 
     for (x, y) in tqdm!((0..MAX_X + 1).cartesian_product(0..MAX_Y + 1)) {
-        let status = get_position_status(x, y, &reversed_commands);
-        if status {
-            light_count += 1;
-        }
+        total_brightness += get_position_brightness(x, y, &commands);
     }
 
-    println!("{}", light_count);
+    println!("{}", total_brightness);
 }
 
-fn get_position_status(x: usize, y: usize, reversed_commands: &Vec<Command>) -> bool {
-    let mut is_toggled = false;
+fn get_position_brightness(x: usize, y: usize, commands: &Vec<Command>) -> usize {
+    let mut brightness = 0;
 
-    for command in reversed_commands.iter() {
+    for command in commands.iter() {
         if !is_inside_command(x, y, command) {
             continue;
         };
-        if command.order == Order::TurnOn {
-            return !is_toggled;
+        brightness = match command.order {
+            Order::TurnOn => brightness + 1,
+            Order::Toggle => brightness + 2,
+            Order::TurnOff => usize::max(1, brightness) - 1,
         }
-        if command.order == Order::TurnOff {
-            return is_toggled;
-        }
-
-        is_toggled = !is_toggled;
     }
-    panic!("Impossible to arrive to the end of commands.")
+
+    brightness
 }
 
 fn is_inside_command(x: usize, y: usize, command: &Command) -> bool {
@@ -95,22 +90,14 @@ fn parse_command(line: &String) -> Command {
     }
 }
 
-fn parse_reversed_commands(file_path: &String) -> Vec<Command> {
+fn parse_commands(file_path: &String) -> Vec<Command> {
     let file = File::open(file_path).expect("File not found!");
     let buf_reader = BufReader::new(file);
 
-    let mut reversed_commands: Vec<Command> = buf_reader
+    let commands: Vec<Command> = buf_reader
         .lines()
         .map(|line| parse_command(&line.expect("a new line")))
         .collect();
 
-    reversed_commands.reverse();
-    reversed_commands.push(Command {
-        order: Order::TurnOff,
-        start_x: 0,
-        start_y: 0,
-        end_x: MAX_X,
-        end_y: MAX_Y,
-    });
-    reversed_commands
+    commands
 }
