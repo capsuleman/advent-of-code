@@ -2,6 +2,7 @@ use std::{
     env,
     fs::File,
     io::{BufReader, Read},
+    process::exit,
 };
 
 fn main() {
@@ -14,14 +15,19 @@ fn main() {
         .read_to_string(&mut content)
         .expect("Read file");
 
-    let floor = content
-        .as_bytes()
-        .into_iter()
-        .fold(0, |floor, char| match char {
+    let mut floor: i32 = 0;
+    for (index, char) in content.as_bytes().into_iter().enumerate() {
+        floor = match char {
             b'(' => floor + 1,
             b')' => floor - 1,
             _ => panic!("Unknown char: {}", char),
-        });
+        };
 
-    println!("{floor}");
+        if floor < 0 {
+            println!("{}", index + 1);
+            exit(0);
+        }
+    }
+
+    panic!("Arrived to the end of input...");
 }
