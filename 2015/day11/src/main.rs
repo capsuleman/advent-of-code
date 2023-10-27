@@ -69,6 +69,12 @@ fn main() {
     }
 
     println!("{}", password);
+    password = get_next_password(password);
+
+    while !is_password_valid(&password) {
+        password = get_next_password(password);
+    }
+    println!("{}", password);
 }
 
 fn is_password_valid(password: &String) -> bool {
