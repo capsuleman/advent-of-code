@@ -19,9 +19,17 @@ fn count_json(json: Value) -> i64 {
         Value::Number(number) => number.as_i64().unwrap(),
         Value::String(_) => 0,
         Value::Array(json_vec) => json_vec.into_iter().map(count_json).sum(),
-        Value::Object(json_map) => json_map
-            .into_iter()
-            .map(|(_key, json)| count_json(json))
-            .sum(),
+        Value::Object(json_map) => {
+            if json_map
+                .values()
+                .any(|value| value == &Value::String("red".to_string()))
+            {
+                return 0;
+            };
+            json_map
+                .into_iter()
+                .map(|(_key, json)| count_json(json))
+                .sum()
+        }
     }
 }
