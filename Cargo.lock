@@ -185,6 +185,15 @@ name = "day12-2022"
 version = "0.1.0"
 
 [[package]]
+name = "day13-2015"
+version = "0.1.0"
+dependencies = [
+ "itertools 0.11.0",
+ "lazy_static",
+ "regex",
+]
+
+[[package]]
 name = "day13-2022"
 version = "0.1.0"
 
