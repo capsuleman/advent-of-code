@@ -33,7 +33,8 @@ fn main() {
 
 fn parse_input(file_path: &String) -> (HashMap<(String, String), i32>, HashSet<String>) {
     let mut relations = HashMap::new();
-    let mut names = HashSet::new();
+    let me = String::from("me");
+    let mut names = HashSet::from([me.clone()]);
 
     let file = File::open(file_path).expect("File not found!");
     let mut line_iter = BufReader::new(file).lines();
@@ -56,6 +57,11 @@ fn parse_input(file_path: &String) -> (HashMap<(String, String), i32>, HashSet<S
         names.insert(name_1.clone());
         names.insert(name_2.clone());
         relations.insert((name_1, name_2), amount);
+    }
+
+    for name in names.iter() {
+        relations.insert((me.clone(), name.clone()), 0);
+        relations.insert((name.clone(), me.clone()), 0);
     }
 
     (relations, names)
