@@ -114,15 +114,15 @@ const ENEMY_ARMOR: u32 = 2;
 const PLAYER_HP: u32 = 100;
 
 fn main() {
-    let mut min_cost = u32::MAX;
+    let mut max_cost = 0;
 
     for set in generate_sets() {
-        if is_winning_set(&set) {
-            min_cost = u32::min(min_cost, set.cost);
+        if !is_winning_set(&set) {
+            max_cost = u32::max(max_cost, set.cost);
         }
     }
 
-    println!("{}", min_cost);
+    println!("{}", max_cost);
 }
 
 fn generate_sets() -> Vec<Item> {
