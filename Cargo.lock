@@ -210,6 +210,14 @@ name = "day14-2022"
 version = "0.1.0"
 
 [[package]]
+name = "day15-2015"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "regex",
+]
+
+[[package]]
 name = "day15-2022"
 version = "0.1.0"
 dependencies = [
