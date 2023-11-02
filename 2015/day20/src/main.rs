@@ -3,7 +3,8 @@ fn main() {
         let divisors = divisors::get_divisors(house_number);
         let score = divisors
             .into_iter()
-            .fold(10 * (1 + house_number), |sum, divisor| sum + 10 * divisor);
+            .filter(|divisor| house_number / divisor <= 50)
+            .fold(11 * house_number, |sum, divisor| sum + 11 * divisor);
 
         if score >= 33100000 {
             println!("{house_number}");
