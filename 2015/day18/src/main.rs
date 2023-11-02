@@ -68,10 +68,13 @@ fn parse_grid(file_path: &String) -> Grid {
         last_x = x;
     }
 
-    Grid {
+    let mut grid = Grid {
         positions_on: grid,
         size: last_x + 1,
-    }
+    };
+
+    add_corners(&mut grid);
+    grid
 }
 
 fn next_step(grid: Grid) -> Grid {
@@ -87,10 +90,12 @@ fn next_step(grid: Grid) -> Grid {
         }
     }
 
-    Grid {
+    let mut next_grid = Grid {
         positions_on: next_positions_on,
         size: grid.size,
-    }
+    };
+    add_corners(&mut next_grid);
+    next_grid
 }
 
 fn is_light_on_next_grid(position: &Position, grid: &Grid) -> bool {
@@ -158,4 +163,20 @@ fn get_neighbors(position: &Position) -> HashSet<Position> {
     }
 
     neighbors
+}
+
+fn add_corners(grid: &mut Grid) {
+    grid.positions_on.insert(Position { x: 0, y: 0 });
+    grid.positions_on.insert(Position {
+        x: 0,
+        y: grid.size - 1,
+    });
+    grid.positions_on.insert(Position {
+        x: grid.size - 1,
+        y: 0,
+    });
+    grid.positions_on.insert(Position {
+        x: grid.size - 1,
+        y: grid.size - 1,
+    });
 }
