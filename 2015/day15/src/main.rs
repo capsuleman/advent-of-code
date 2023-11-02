@@ -14,6 +14,7 @@ struct Ingredient {
     durability: i32,
     flavor: i32,
     texture: i32,
+    calories: i32,
 }
 
 impl AddAssign for Ingredient {
@@ -22,6 +23,7 @@ impl AddAssign for Ingredient {
         self.durability += rhs.durability;
         self.flavor += rhs.flavor;
         self.texture += rhs.texture;
+        self.calories += rhs.calories;
     }
 }
 
@@ -34,6 +36,7 @@ impl Mul<u32> for Ingredient {
             durability: self.durability * rhs as i32,
             flavor: self.flavor * rhs as i32,
             texture: self.texture * rhs as i32,
+            calories: self.calories * rhs as i32,
         }
     }
 }
@@ -49,7 +52,7 @@ impl Ingredient {
 
 lazy_static! {
     static ref INPUT_RE: Regex = Regex::new(
-        r"^[A-Za-z]+: capacity (-?\d+), durability (-?\d+), flavor (-?\d+), texture (-?\d+), calories -?\d+$"
+        r"^[A-Za-z]+: capacity (-?\d+), durability (-?\d+), flavor (-?\d+), texture (-?\d+), calories (-?\d+)$"
     )
     .unwrap();
 }
@@ -82,12 +85,14 @@ fn parse_ingredients(file_path: &String) -> Vec<Ingredient> {
         let durability = captures[2].parse::<i32>().expect("a number");
         let flavor = captures[3].parse::<i32>().expect("a number");
         let texture = captures[4].parse::<i32>().expect("a number");
+        let calories = captures[5].parse::<i32>().expect("a number");
 
         ingredients.push(Ingredient {
             capacity,
             durability,
             flavor,
             texture,
+            calories,
         })
     }
 
@@ -98,6 +103,10 @@ fn get_combination_score(combination: Vec<u32>, ingredients: &Vec<Ingredient>) -
     let mut total_ingredients = Ingredient::default();
     for (&spoon_count, ingredient) in combination.iter().zip(ingredients) {
         total_ingredients += ingredient.clone() * spoon_count;
+    }
+
+    if total_ingredients.calories != 500 {
+        return 0;
     }
 
     total_ingredients.get_score()
