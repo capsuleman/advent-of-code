@@ -56,5 +56,11 @@ fn is_aunt_valid(line: &String) -> bool {
 }
 
 fn check_criteria(name: &str, value: u32) -> bool {
-    TICKER_TAPE[name] == value
+    match name {
+        "cats" => TICKER_TAPE[name] < value,
+        "trees" => TICKER_TAPE[name] < value,
+        "pomeranians" => TICKER_TAPE[name] > value,
+        "goldfish" => TICKER_TAPE[name] > value,
+        _ => TICKER_TAPE[name] == value,
+    }
 }
