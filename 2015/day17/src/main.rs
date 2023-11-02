@@ -18,7 +18,18 @@ fn main() {
 }
 
 fn get_combination_count(target_size: u32, containers_size: VecDeque<u32>) -> usize {
-    get_combinations(target_size, 0, containers_size).len()
+    let combinations = get_combinations(target_size, 0, containers_size);
+
+    let minimum_container_count = combinations
+        .iter()
+        .min_by_key(|combination| combination.len())
+        .unwrap()
+        .len();
+
+    combinations
+        .iter()
+        .filter(|combination| combination.len() == minimum_container_count)
+        .count()
 }
 
 fn get_combinations(
