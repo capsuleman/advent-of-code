@@ -150,6 +150,11 @@ fn play(game: &mut Game, spell: Spell) -> Result<(), EndGame> {
 
 fn play_player_turn(game: &mut Game, spell: Spell) -> Result<(), EndGame> {
     // println!("-- Player turn --");
+    if game.player_hp <= 1 {
+        return Err(EndGame::MonsterWin);
+    }
+    game.player_hp -= 1;
+
     if let Err(error) = play_default_actions(game) {
         return Err(error);
     };
