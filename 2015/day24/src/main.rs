@@ -12,7 +12,7 @@ fn main() {
     let packets = parse_packets(&file_path);
 
     let total_weight: u128 = packets.iter().sum();
-    let target_weight = total_weight / 3;
+    let target_weight = total_weight / 4;
 
     println!("{packets:?} {target_weight}");
 
@@ -105,7 +105,21 @@ fn get_combinations(
 
 fn could_be_split_equally(packets: &Vec<u128>) -> bool {
     let packet_size: u128 = packets.iter().sum();
-    has_combinations(packet_size / 2, 0, packets.clone())
+    let second_packages_packets = get_combinations(packet_size / 3, 0, packets.clone());
+
+    for second_package_packets in second_packages_packets {
+        let complement_packets: Vec<_> = packets
+            .clone()
+            .into_iter()
+            .filter(|packet| !second_package_packets.contains(packet))
+            .collect();
+
+        if has_combinations(packet_size / 3, 0, complement_packets) {
+            return true;
+        }
+    }
+
+    false
 }
 
 fn has_combinations(
