@@ -48,7 +48,7 @@ fn main() {
 
     let mut inner_state = InnerState {
         instruction_index: 0,
-        a: 0,
+        a: 1,
         b: 0,
     };
 
